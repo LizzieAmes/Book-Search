@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, Col, Form, Button, Card, Row } from 'react-bootstrap';
-import { useLazyQuery, useMutation } from '@apollo/client';
+import { useLazyQuery, useQuery, useMutation } from '@apollo/client';
 import Auth from '../utils/auth';
 import { SAVE_BOOK, SEARCH_BOOKS } from '../utils/API';
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
@@ -9,12 +9,19 @@ const SearchBooks = () => {
   const [searchInput, setSearchInput] = useState('');
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
 
+  // const { loading, bookData } = useQuery(SEARCH_BOOKS, {
+  //   variables: { query: searchInput }
+  // })
+
   const [executeSearch, { data, loading, error }] = useLazyQuery(SEARCH_BOOKS, {
-    onCompleted: (data) => {
-      // Assuming the data returned has a structure of { searchBooks: [books] }
+    fetchPolicy: 'no-cache'
+  
+  })
+  useEffect(() => {
+    if (data && data.searchBooks){
       setSearchedBooks(data.searchBooks);
-    },
-  });
+    }
+  },[data]) 
 
   const [saveBook] = useMutation(SAVE_BOOK, {
     update(cache, { data: { saveBook } }) {
@@ -43,8 +50,12 @@ const SearchBooks = () => {
     event.preventDefault();
 
     if (!searchInput.trim()) return;
-
-    executeSearch({ variables: { query: searchInput } });
+    console.log(searchInput);
+    
+    // setSearchedBooks(bookData.searchBooks);
+    await executeSearch({ variables: { query: searchInput } });
+    // console.log(data.searchBooks);
+    
   };
 
 const handleSaveBook = async (bookId) => {
@@ -58,8 +69,6 @@ const handleSaveBook = async (bookId) => {
     return false;
   }
 
-  // Destructure the bookToSave object to remove the __typename field
-  // and any other fields not expected by your GraphQL mutation.
   const { __typename, ...bookDataForSave } = bookToSave;
 
   try {
@@ -76,6 +85,9 @@ const handleSaveBook = async (bookId) => {
   }
 };
 
+// if (data && data.searchBooks){
+//   setSearchedBooks(data.searchBooks)
+// }
   return (
     <>
       <div className="text-light bg-dark p-5">

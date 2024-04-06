@@ -16,7 +16,8 @@ const resolvers = {
 
       throw new AuthenticationError('Not logged in');
     },
-    searchBooks: async (_, { query }) => {
+    searchBooks: async (parent, { query }) => {
+      console.log(query);
       try {
         const response = await axios.get(
           `https://www.googleapis.com/books/v1/volumes?q=${query}`
